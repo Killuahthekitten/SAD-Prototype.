@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSU Clinic — Digital Queueing & Schedule Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600;700;900&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  :root {
+    --psu-royal-blue: #0927D8;
+    --psu-blue-deep: #071aad;
+    --psu-blue-dark: #040e6e;
+    --psu-blue-navy: #020847;
+    --psu-golden: #FFDA27;
+    --psu-golden-warm: #f5c400;
+    --psu-golden-deep: #d4a800;
+    --medical-white: #f8faff;
+    --medical-soft: #edf2ff;
+    --medical-green: #00b894;
+    --medical-green-soft: #00cec9;
+    --medical-red: #e17055;
+    --medical-teal: #0984e3;
+    --text-dark: #0a0e2e;
+    --text-mid: #2d3561;
+    --text-light: #6b7bb8;
+    --glass-bg: rgba(255,255,255,0.07);
+    --glass-border: rgba(255,218,39,0.2);
+    --shadow-gold: 0 0 40px rgba(255,218,39,0.15);
+    --shadow-blue: 0 20px 60px rgba(9,39,216,0.3);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--psu-blue-navy);
+    color: var(--medical-white);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── SPLASH SCREEN ── */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, var(--psu-blue-navy) 0%, var(--psu-blue-dark) 40%, #0d1f8f 70%, var(--psu-royal-blue) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  #splash.hidden { opacity: 0; transform: scale(1.05); pointer-events: none; }
+
+  .splash-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: float-particle linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes float-particle {
+    0%   { opacity: 0; transform: translateY(100vh) scale(0); }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-20vh) scale(1.2); }
+  }
+
+  .splash-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(255,218,39,0.15);
+    animation: expand-ring 3s ease-out infinite;
+  }
+  @keyframes expand-ring {
+    0%   { transform: scale(0.5); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  .splash-logo-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: splash-entry 1.2s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+  }
+
+  @keyframes splash-entry {
+    from { opacity: 0; transform: translateY(60px) scale(0.8); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .psu-seal-svg {
+    width: 160px;
+    height: 160px;
+    filter: drop-shadow(0 0 30px rgba(255,218,39,0.5));
+    animation: seal-pulse 3s ease-in-out infinite;
+  }
+  @keyframes seal-pulse {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(255,218,39,0.5)); }
+    50%       { filter: drop-shadow(0 0 60px rgba(255,218,39,0.9)); }
+  }
+
+  .splash-university-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-weight: 900;
+    color: var(--psu-golden);
+    text-align: center;
+    margin-top: 24px;
+    letter-spacing: 0.08em;
+    text-shadow: 0 2px 20px rgba(255,218,39,0.4);
+    animation: text-shimmer 2s ease-in-out infinite alternate;
+  }
+  @keyframes text-shimmer {
+    from { text-shadow: 0 2px 20px rgba(255,218,39,0.4); }
+    to   { text-shadow: 0 2px 40px rgba(255,218,39,0.8), 0 0 80px rgba(255,218,39,0.3); }
+  }
+
+  .splash-subtitle {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 1rem;
+    font-weight: 300;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    animation: fade-in-up 0.8s ease 1.2s both;
+  }
+
+  .splash-divider {
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--psu-golden), transparent);
+    margin: 20px 0;
+    animation: fade-in-up 0.8s ease 1.4s both;
+  }
+
+  .splash-system-name {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-align: center;
+    animation: fade-in-up 0.8s ease 1.6s both;
+  }
+
+  .splash-loading {
+    margin-top: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    animation: fade-in-up 0.8s ease 1.8s both;
+  }
+
+  .loading-bar-track {
+    width: 280px;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .loading-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--psu-royal-blue), var(--psu-golden));
+    border-radius: 2px;
+    animation: loading-fill 2.5s ease 2s both;
+    width: 0%;
+  }
+  @keyframes loading-fill {
+    to { width: 100%; }
+  }
+
+  .loading-text {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.2em;
+    font-family: 'JetBrains Mono', monospace;
+    animation: blink 1s ease infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── MAIN APP ── */
+  #app {
+    opacity: 0;
+    transition: opacity 0.8s ease 0.2s;
+    min-height: 100vh;
+  }
+  #app.visible { opacity: 1; }
+
+  /* ── TOPNAV ── */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(2,8,71,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,218,39,0.2);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .nav-seal { width: 38px; height: 38px; }
+  .nav-brand-text { display: flex; flex-direction: column; }
+  .nav-brand-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--psu-golden);
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+  .nav-brand-sub {
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.05);
+    padding: 4px;
+    border-radius: 10px;
+  }
+  .nav-tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-tab:hover { color: white; background: rgba(255,255,255,0.08); }
+  .nav-tab.active {
+    background: var(--psu-royal-blue);
+    color: var(--psu-golden);
+    box-shadow: 0 2px 12px rgba(9,39,216,0.4);
+  }
+
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
+  .nav-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+  }
+  .nav-status-dot {
+    width: 8px; height: 8px;
+    background: var(--medical-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--medical-green);
+    animation: pulse-dot 2s ease infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── HERO SECTION ── */
+  .hero {
+    background: linear-gradient(160deg, var(--psu-blue-navy) 0%, var(--psu-blue-dark) 50%, #0d1f8f 100%);
+    padding: 60px 40px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(9,39,216,0.4), transparent),
+                radial-gradient(ellipse 40% 40% at 80% 80%, rgba(255,218,39,0.06), transparent);
+  }
+  .hero-cross {
+    position: absolute;
+    font-size: 200px;
+    color: rgba(255,255,255,0.02);
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    line-height: 1;
+    user-select: none;
+    animation: float-cross 6s ease-in-out infinite;
+  }
+  @keyframes float-cross { 0%,100%{transform:translateY(-50%) rotate(0deg)} 50%{transform:translateY(-55%) rotate(5deg)} }
+
+  .hero-content { position: relative; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,218,39,0.1);
+    border: 1px solid rgba(255,218,39,0.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--psu-golden);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fade-in-up 0.6s ease 0.2s both;
+  }
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 4vw, 3.2rem);
+    font-weight: 700;
+    color: white;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    animation: fade-in-up 0.6s ease 0.4s both;
+  }
+  .hero-title span { color: var(--psu-golden); }
+  .hero-desc {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.65);
+    max-width: 560px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+    animation: fade-in-up 0.6s ease 0.6s both;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    animation: fade-in-up 0.6s ease 0.8s both;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-num {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--psu-golden);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── MODULE PORTAL (LOGIN SELECTION) ── */
+  .portal-section {
+    padding: 60px 40px;
+    background: linear-gradient(180deg, #0d1f8f 0%, var(--psu-blue-navy) 100%);
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .section-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--psu-golden);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    font-weight: 700;
+    color: white;
+  }
+  .section-line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--psu-royal-blue), var(--psu-golden));
+    margin: 16px auto 0;
+    border-radius: 2px;
+  }
+
+  .portal-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .portal-card {
+    background: linear-gradient(135deg, rgba(9,39,216,0.25), rgba(2,8,71,0.6));
+    border: 1px solid rgba(255,218,39,0.15);
+    border-radius: 20px;
+    padding: 36px 28px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+  }
+  .portal-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,218,39,0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 20px;
+  }
+  .portal-card::after {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(135deg, var(--psu-golden), var(--psu-royal-blue), var(--psu-golden));
+    border-radius: 22px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .portal-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 24px 60px rgba(9,39,216,0.4), 0 0 40px rgba(255,218,39,0.1);
+    border-color: rgba(255,218,39,0.4);
+  }
+  .portal-card:hover::before { opacity: 1; }
+
+  .portal-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--psu-royal-blue), var(--psu-blue-deep));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(9,39,216,0.4);
+    transition: transform 0.3s ease;
+  }
+  .portal-card:hover .portal-icon { transform: scale(1.1) rotate(-5deg); }
+
+  .portal-card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+  }
+  .portal-card-desc {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .portal-card-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .portal-card-features li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.65);
+  }
+  .feat-dot {
+    width: 6px; height: 6px;
+    background: var(--psu-golden);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .portal-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, var(--psu-royal-blue), var(--psu-blue-deep));
+    border: none;
+    border-radius: 10px;
+    color: var(--psu-golden);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .portal-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,218,39,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+  }
+  .portal-btn:hover::after { transform: translateX(100%); }
+  .portal-btn:hover { box-shadow: 0 4px 20px rgba(9,39,216,0.5); transform: translateY(-1px); }
+
+  /* ── MODAL / PANEL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2,8,71,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: modal-fade-in 0.3s ease;
+  }
+  @keyframes modal-fade-in { from{opacity:0} to{opacity:1} }
+
+  .modal-panel {
+    background: linear-gradient(145deg, #0d1f8f, var(--psu-blue-navy));
+    border: 1px solid rgba(255,218,39,0.2);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 60px rgba(9,39,216,0.3);
+    animation: modal-slide-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,218,39,0.3) transparent;
+  }
+  @keyframes modal-slide-in {
+    from { opacity:0; transform: translateY(30px) scale(0.95); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+  .modal-panel::-webkit-scrollbar { width: 4px; }
+  .modal-panel::-webkit-scrollbar-track { background: transparent; }
+  .modal-panel::-webkit-scrollbar-thumb { background: rgba(255,218,39,0.3); border-radius: 2px; }
+
+  .modal-header {
+    padding: 28px 28px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,218,39,0.1);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+  }
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+  }
+  .modal-sub {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+  }
+  .modal-close {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    width: 32px; height: 32px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex; align-items:center; justify-content:center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.15); color: white; }
+
+  .modal-body { padding: 0 28px 28px; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: white;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.25s ease;
+  }
+  .form-input::placeholder { color: rgba(255,255,255,0.3); }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: rgba(255,218,39,0.5);
+    background: rgba(255,255,255,0.09);
+    box-shadow: 0 0 0 3px rgba(255,218,39,0.1);
+  }
+  .form-select option { background: #0d1f8f; color: white; }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, var(--psu-royal-blue), var(--psu-blue-deep));
+    border: 1px solid rgba(255,218,39,0.3);
+    border-radius: 10px;
+    color: var(--psu-golden);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { box-shadow: 0 4px 24px rgba(9,39,216,0.5); transform: translateY(-2px); }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.3); color: white; }
+
+  .form-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .form-divider-line { flex:1; height:1px; background: rgba(255,255,255,0.1); }
+  .form-divider-text { font-size:0.75rem; color:rgba(255,255,255,0.3); }
+
+  /* ── DASHBOARD LAYOUT ── */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: calc(100vh - 64px);
+  }
+  .sidebar {
+    background: rgba(2,8,71,0.95);
+    border-right: 1px solid rgba(255,218,39,0.12);
+    padding: 24px 0;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .sidebar-section-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255,218,39,0.5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0 20px;
+    margin: 20px 0 8px;
+  }
+  .sidebar-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.55);
+    border-left: 3px solid transparent;
+    margin: 1px 0;
+  }
+  .sidebar-nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
+  .sidebar-nav-item.active {
+    color: var(--psu-golden);
+    background: rgba(9,39,216,0.3);
+    border-left-color: var(--psu-golden);
+  }
+  .sidebar-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .sidebar-user-card {
+    margin: 16px;
+    padding: 14px;
+    background: rgba(9,39,216,0.25);
+    border: 1px solid rgba(255,218,39,0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sidebar-avatar {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--psu-royal-blue), var(--psu-golden-warm));
+    border-radius: 10px;
+    display: flex; align-items:center; justify-content:center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+  .sidebar-user-name { font-size: 0.82rem; font-weight: 600; color: white; }
+  .sidebar-user-role { font-size: 0.7rem; color: rgba(255,255,255,0.45); margin-top: 1px; }
+
+  .dash-content { padding: 32px; overflow-y: auto; }
+  .dash-content-inner { max-width: 1000px; }
+
+  /* ── DASHBOARD WIDGETS ── */
+  .dash-greeting {
+    margin-bottom: 32px;
+  }
+  .dash-greeting-tag {
+    font-size: 0.7rem;
+    color: rgba(255,218,39,0.7);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .dash-greeting-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: linear-gradient(135deg, rgba(9,39,216,0.2), rgba(2,8,71,0.5));
+    border: 1px solid rgba(255,218,39,0.12);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(255,218,39,0.08), transparent);
+    border-radius: 50%;
+  }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(9,39,216,0.3); }
+  .stat-icon { font-size: 1.4rem; margin-bottom: 12px; }
+  .stat-val {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+  }
+  .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+  .stat-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+  .stat-badge.green { background: rgba(0,184,148,0.15); color: var(--medical-green); }
+  .stat-badge.blue  { background: rgba(9,132,227,0.15); color: var(--medical-teal); }
+  .stat-badge.gold  { background: rgba(255,218,39,0.12); color: var(--psu-golden); }
+
+  .content-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media(max-width:720px) { .content-row { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: linear-gradient(135deg, rgba(9,39,216,0.15), rgba(2,8,71,0.5));
+    border: 1px solid rgba(255,218,39,0.12);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,218,39,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-body { padding: 16px 20px; }
+  .panel-action {
+    font-size: 0.75rem;
+    color: var(--psu-golden);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+  .panel-action:hover { opacity: 1; }
+
+  /* ── QUEUE DISPLAY ── */
+  .queue-now {
+    text-align: center;
+    padding: 24px 16px;
+    background: linear-gradient(135deg, rgba(9,39,216,0.3), rgba(2,8,71,0.7));
+    border-radius: 12px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .queue-now::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(9,39,216,0.3), transparent 70%);
+    animation: queue-glow 3s ease-in-out infinite;
+  }
+  @keyframes queue-glow { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .queue-label {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    position: relative;
+  }
+  .queue-number {
+    font-family: 'Cinzel', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--psu-golden);
+    line-height: 1;
+    position: relative;
+    text-shadow: 0 0 30px rgba(255,218,39,0.5);
+    animation: num-pulse 2s ease-in-out infinite;
+  }
+  @keyframes num-pulse { 0%,100%{text-shadow:0 0 30px rgba(255,218,39,0.5)} 50%{text-shadow:0 0 60px rgba(255,218,39,0.9)} }
+  .queue-name { font-size: 0.9rem; color: rgba(255,255,255,0.7); position: relative; }
+
+  .queue-list { display: flex; flex-direction: column; gap: 8px; }
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.2s ease;
+  }
+  .queue-item:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,218,39,0.15); }
+  .queue-pos {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--psu-golden);
+    width: 32px;
+    text-align: center;
+  }
+  .queue-info { flex: 1; }
+  .queue-item-name { font-size: 0.85rem; font-weight: 600; color: white; }
+  .queue-item-type { font-size: 0.72rem; color: rgba(255,255,255,0.45); }
+  .queue-eta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(255,218,39,0.7);
+    text-align: right;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .status-pill.waiting  { background:rgba(255,218,39,0.12); color:var(--psu-golden); }
+  .status-pill.serving  { background:rgba(0,184,148,0.12); color:var(--medical-green); }
+  .status-pill.done     { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.4); }
+  .status-pill.priority { background:rgba(225,112,85,0.15); color:var(--medical-red); }
+
+  /* ── APPOINTMENT CARDS ── */
+  .appt-list { display: flex; flex-direction: column; gap: 10px; }
+  .appt-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .appt-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,218,39,0.2); transform: translateX(4px); }
+  .appt-date {
+    background: rgba(9,39,216,0.4);
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .appt-date-day { font-family:'Cinzel',serif; font-size:1.3rem; font-weight:700; color:var(--psu-golden); line-height:1; }
+  .appt-date-mon { font-size:0.65rem; color:rgba(255,255,255,0.5); letter-spacing:0.1em; text-transform:uppercase; }
+  .appt-info { flex: 1; }
+  .appt-type { font-size: 0.88rem; font-weight: 600; color: white; }
+  .appt-time { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:rgba(255,255,255,0.45); margin-top:2px; }
+  .appt-doctor { font-size:0.72rem; color:rgba(255,218,39,0.7); margin-top:2px; }
+
+  /* ── SCHEDULE GRID ── */
+  .sched-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .sched-day-header {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+    text-align: center;
+    padding: 6px 0;
+    text-transform: uppercase;
+  }
+  .sched-slot {
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    font-size: 0.75rem;
+  }
+  .sched-slot:hover { transform: scale(1.05); }
+  .sched-slot.avail  { background:rgba(0,184,148,0.15); color:var(--medical-green); border:1px solid rgba(0,184,148,0.25); }
+  .sched-slot.busy   { background:rgba(225,112,85,0.15); color:var(--medical-red); border:1px solid rgba(225,112,85,0.2); }
+  .sched-slot.off    { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.2); border:1px solid transparent; }
+  .sched-slot.today  { box-shadow: 0 0 0 2px var(--psu-golden); }
+
+  /* ── CHART BAR ── */
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
+  .chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .chart-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.8s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+  }
+  .chart-bar.blue  { background: linear-gradient(to top, var(--psu-royal-blue), #4169e1); }
+  .chart-bar.gold  { background: linear-gradient(to top, var(--psu-golden-warm), var(--psu-golden)); }
+  .chart-bar.green { background: linear-gradient(to top, var(--medical-green), var(--medical-green-soft)); }
+  .chart-day { font-size:0.6rem; color:rgba(255,255,255,0.4); text-transform:uppercase; }
+
+  /* ── NOTIFICATION ── */
+  .notif-list { display:flex; flex-direction:column; gap:8px; }
+  .notif-item {
+    display:flex;
+    gap:10px;
+    padding:10px 12px;
+    background:rgba(255,255,255,0.04);
+    border-radius:10px;
+    border-left:3px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .notif-item.info   { border-left-color:var(--psu-royal-blue); }
+  .notif-item.warn   { border-left-color:var(--psu-golden); }
+  .notif-item.succ   { border-left-color:var(--medical-green); }
+  .notif-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+  .notif-text { font-size:0.8rem; color:rgba(255,255,255,0.75); line-height:1.4; }
+  .notif-time { font-size:0.65rem; color:rgba(255,255,255,0.35); margin-top:3px; font-family:'JetBrains Mono',monospace; }
+
+  /* ── PATIENT LOG TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width:100%; border-collapse:collapse; }
+  th {
+    font-size:0.65rem;
+    font-weight:700;
+    color:rgba(255,218,39,0.6);
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    padding:10px 12px;
+    text-align:left;
+    border-bottom:1px solid rgba(255,218,39,0.1);
+    white-space:nowrap;
+  }
+  td {
+    padding:10px 12px;
+    font-size:0.82rem;
+    color:rgba(255,255,255,0.75);
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.03); color:white; }
+
+  /* ── CALL NEXT BUTTON ── */
+  .call-next-btn {
+    background: linear-gradient(135deg, var(--medical-green), var(--medical-green-soft));
+    border: none;
+    border-radius: 14px;
+    padding: 18px 32px;
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 24px rgba(0,184,148,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  .call-next-btn:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 12px 36px rgba(0,184,148,0.5);
+  }
+  .call-next-btn:active { transform: translateY(0) scale(0.99); }
+
+  /* ── ADMIN REPORT ── */
+  .report-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .report-metric {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .report-metric-val {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--psu-golden);
+  }
+  .report-metric-label { font-size:0.7rem; color:rgba(255,255,255,0.45); margin-top:4px; }
+
+  .ailment-row {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .ailment-label { font-size:0.8rem; color:rgba(255,255,255,0.7); width:120px; flex-shrink:0; }
+  .ailment-bar-track { flex:1; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; }
+  .ailment-bar-fill {
+    height:100%;
+    border-radius:3px;
+    background: linear-gradient(90deg, var(--psu-royal-blue), var(--psu-golden));
+    transition: width 1s ease;
+  }
+  .ailment-pct { font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:rgba(255,218,39,0.7); width:32px; text-align:right; }
+
+  /* ── USER MGMT ── */
+  .user-table-row { cursor: pointer; }
+  .user-avatar-sm {
+    width:28px; height:28px;
+    background:linear-gradient(135deg, var(--psu-royal-blue), var(--psu-golden-warm));
+    border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:0.7rem; font-weight:700; color:white;
+  }
+  .role-badge {
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:6px;
+    font-size:0.65rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+  }
+  .role-badge.student { background:rgba(9,39,216,0.25); color:#7a9fff; }
+  .role-badge.staff   { background:rgba(0,184,148,0.2); color:var(--medical-green); }
+  .role-badge.admin   { background:rgba(255,218,39,0.15); color:var(--psu-golden); }
+
+  /* ── FLOATING BREADCRUMB ── */
+  .breadcrumb {
+    display:flex; align-items:center; gap:6px;
+    font-size:0.75rem;
+    color:rgba(255,255,255,0.4);
+    margin-bottom:24px;
+  }
+  .breadcrumb-sep { color:rgba(255,255,255,0.2); }
+  .breadcrumb-cur { color:rgba(255,255,255,0.75); }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:760px) {
+    .dashboard { grid-template-columns: 1fr; }
+    .sidebar { display:none; }
+    .nav-tabs { display:none; }
+    .form-row { grid-template-columns:1fr; }
+    .hero { padding:40px 24px; }
+    .portal-section { padding:40px 24px; }
+    .dash-content { padding:20px; }
+    .content-row { grid-template-columns:1fr; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+  }
+
+  /* ── TOAST ── */
+  .toast-container { position:fixed; bottom:24px; right:24px; z-index:9000; display:flex; flex-direction:column; gap:8px; }
+  .toast {
+    background:rgba(9,39,216,0.95);
+    border:1px solid rgba(255,218,39,0.3);
+    border-radius:12px;
+    padding:12px 18px;
+    font-size:0.82rem;
+    color:white;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+    backdrop-filter:blur(10px);
+    animation: toast-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    max-width:300px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .toast.exit { animation: toast-out 0.3s ease forwards; }
+  @keyframes toast-in  { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes toast-out { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(40px)} }
+
+  /* ── MEDICAL CROSS DECORATION ── */
+  .med-cross-deco {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:18px; height:18px; position:relative;
+  }
+  .med-cross-deco::before, .med-cross-deco::after {
+    content:'';
+    position:absolute;
+    background:var(--medical-green);
+    border-radius:1px;
+  }
+  .med-cross-deco::before { width:3px; height:14px; }
+  .med-cross-deco::after  { width:14px; height:3px; }
+
+  /* ── ANIMATED DOTS ── */
+  .typing-dots span {
+    display:inline-block;
+    width:4px; height:4px;
+    background:var(--psu-golden);
+    border-radius:50%;
+    margin:0 1px;
+    animation: dot-bounce 1.4s ease infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay:0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes dot-bounce { 0%,80%,100%{transform:scale(0.8); opacity:0.5} 40%{transform:scale(1.2); opacity:1} }
+
+  .text-gold { color: var(--psu-golden); }
+  .text-green { color: var(--medical-green); }
+  .text-muted { color: rgba(255,255,255,0.45); font-size:0.78rem; }
+  .mt-4 { margin-top:4px; }
+  .mt-8 { margin-top:8px; }
+  .mt-16 { margin-top:16px; }
+  .full-panel { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-particles" id="particles"></div>
+  <div class="splash-ring" style="width:300px;height:300px;animation-delay:0s"></div>
+  <div class="splash-ring" style="width:500px;height:500px;animation-delay:1s"></div>
+  <div class="splash-ring" style="width:700px;height:700px;animation-delay:2s"></div>
+  <div class="splash-logo-container">
+    <!-- PSU Seal SVG (vector representation) -->
+    <svg class="psu-seal-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="sealGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#1a3fe0"/>
+          <stop offset="100%" stop-color="#0727D8"/>
+        </radialGradient>
+        <radialGradient id="innerGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#0d2aad"/>
+          <stop offset="100%" stop-color="#020847"/>
+        </radialGradient>
+      </defs>
+      <!-- Outer ring -->
+      <circle cx="100" cy="100" r="96" fill="url(#sealGrad)" stroke="#FFDA27" stroke-width="3"/>
+      <!-- Inner circle -->
+      <circle cx="100" cy="100" r="75" fill="url(#innerGrad)"/>
+      <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(255,218,39,0.4)" stroke-width="1"/>
+      <!-- Lion body (simplified) -->
+      <ellipse cx="100" cy="118" rx="30" ry="26" fill="#FFDA27" opacity="0.9"/>
+      <!-- Lion head -->
+      <circle cx="100" cy="88" r="20" fill="#FFDA27" opacity="0.9"/>
+      <!-- Mane detail -->
+      <circle cx="100" cy="88" r="24" fill="none" stroke="#d4a800" stroke-width="4" opacity="0.7"/>
+      <!-- Eyes -->
+      <circle cx="93" cy="85" r="2.5" fill="#020847"/>
+      <circle cx="107" cy="85" r="2.5" fill="#020847"/>
+      <!-- Nose -->
+      <ellipse cx="100" cy="91" rx="3" ry="2" fill="#d4a800"/>
+      <!-- Legs -->
+      <rect x="75" y="130" width="12" height="20" rx="4" fill="#FFDA27" opacity="0.8"/>
+      <rect x="113" y="130" width="12" height="20" rx="4" fill="#FFDA27" opacity="0.8"/>
+      <!-- Tail (torch-like) -->
+      <path d="M130 115 Q145 100 140 80 Q155 90 145 70" stroke="#FFDA27" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="142" cy="67" rx="6" ry="10" fill="#FFDA27" opacity="0.8"/>
+      <!-- Stars (9) -->
+      <g fill="#FFDA27" opacity="0.9">
+        <polygon points="75,52 77,58 83,58 78,62 80,68 75,64 70,68 72,62 67,58 73,58" transform="scale(0.55) translate(65,42)"/>
+        <polygon points="100,48 102,54 108,54 103,58 105,64 100,60 95,64 97,58 92,54 98,54" transform="scale(0.55) translate(65,38)"/>
+        <polygon points="125,52 127,58 133,58 128,62 130,68 125,64 120,68 122,62 117,58 123,58" transform="scale(0.55) translate(65,42)"/>
+        <circle cx="80" cy="60" r="3"/>
+        <circle cx="90" cy="54" r="3"/>
+        <circle cx="100" cy="52" r="3"/>
+        <circle cx="110" cy="54" r="3"/>
+        <circle cx="120" cy="60" r="3"/>
+        <circle cx="85" cy="64" r="2"/>
+        <circle cx="115" cy="64" r="2"/>
+      </g>
+      <!-- Scroll / lace at base -->
+      <path d="M70 143 Q100 150 130 143" stroke="#FFDA27" stroke-width="2" fill="none"/>
+      <text x="100" y="142" text-anchor="middle" fill="#FFDA27" font-size="7" font-family="serif" opacity="0.9">PILIPINAS</text>
+      <!-- Circular text -->
+      <path id="topArc" d="M 20,100 A 80,80 0 0,1 180,100" fill="none"/>
+      <path id="botArc" d="M 18,105 A 82,82 0 0,0 182,105" fill="none"/>
+      <text fill="#FFDA27" font-size="9.5" font-family="serif" font-weight="bold" letter-spacing="1.5">
+        <textPath href="#topArc" startOffset="5%">PANGASINAN STATE UNIVERSITY</textPath>
+      </text>
+      <text fill="#FFDA27" font-size="7.5" font-family="serif" letter-spacing="2">
+        <textPath href="#botArc" startOffset="20%">— 1979 —</textPath>
+      </text>
+    </svg>
+
+    <div class="splash-university-name">Pangasinan State University</div>
+    <div class="splash-subtitle">Region's Premier University of Choice</div>
+    <div class="splash-divider"></div>
+    <div class="splash-system-name">Digital Queueing &amp; Schedule Management System<br>University Clinic</div>
+
+    <div class="splash-loading">
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill"></div>
+      </div>
+      <div class="loading-text">Initializing System...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ─── PSU Seal mini ─── */
+const PSUSealMini = () => (
+  <svg className="nav-seal" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="96" fill="#0927D8" stroke="#FFDA27" strokeWidth="4"/>
+    <circle cx="100" cy="100" r="75" fill="#020847"/>
+    <ellipse cx="100" cy="118" rx="28" ry="24" fill="#FFDA27" opacity="0.85"/>
+    <circle cx="100" cy="88" r="19" fill="#FFDA27" opacity="0.9"/>
+    <circle cx="100" cy="88" r="23" fill="none" stroke="#d4a800" strokeWidth="4" opacity="0.6"/>
+    <circle cx="93" cy="85" r="2.5" fill="#020847"/>
+    <circle cx="107" cy="85" r="2.5" fill="#020847"/>
+    {[80,90,100,110,120].map((x,i) => <circle key={i} cx={x} cy={i%2===0?62:56} r="2.5" fill="#FFDA27"/>)}
+    <path d="M128 115 Q143 100 138 80" stroke="#FFDA27" strokeWidth="3" fill="none" strokeLinecap="round"/>
+    <text x="100" y="145" textAnchor="middle" fill="#FFDA27" fontSize="8" fontFamily="serif" opacity="0.8">PILIPINAS</text>
+  </svg>
+);
+
+/* ─── Toast System ─── */
+const ToastContext = React.createContext(null);
+const useToast = () => React.useContext(ToastContext);
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const addToast = (msg, icon = '✅') => {
+    const id = Date.now();
+    setToasts(t => [...t, { id, msg, icon }]);
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
+  };
+  return (
+    <ToastContext.Provider value={addToast}>
+      {children}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className="toast">
+            <span style={{fontSize:'1.1rem'}}>{t.icon}</span>
+            <span>{t.msg}</span>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+/* ─── Live Clock ─── */
+function Clock() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => { const id = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(id); }, []);
+  return <span className="nav-time">{time.toLocaleTimeString('en-PH', {hour:'2-digit', minute:'2-digit', second:'2-digit'})}</span>;
+}
+
+/* ─── MODAL ─── */
+function Modal({ title, sub, onClose, children }) {
+  return (
+    <div className="modal-overlay" onClick={e => e.target.className === 'modal-overlay' && onClose()}>
+      <div className="modal-panel">
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{title}</div>
+            {sub && <div className="modal-sub">{sub}</div>}
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   SPLASH + LANDING PAGE
+════════════════════════════════════════════ */
+function LandingPage({ onEnter }) {
+  return (
+    <>
+      {/* Hero */}
+      <div className="hero">
+        <div className="hero-cross">✚</div>
+        <div className="hero-content">
+          <div className="hero-eyebrow">
+            <span>🏥</span> PSU University Clinic System
+          </div>
+          <h1 className="hero-title">
+            Digital Queueing &amp;<br/><span>Schedule Management</span>
+          </h1>
+          <p className="hero-desc">
+            A streamlined, real-time clinic management platform for Pangasinan State University — 
+            serving students, staff, and administrators with excellence.
+          </p>
+          <div className="hero-stats">
+            <div className="hero-stat">
+              <div className="hero-stat-num">9</div>
+              <div className="hero-stat-label">Campuses</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">∞</div>
+              <div className="hero-stat-label">Real-time</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">3</div>
+              <div className="hero-stat-label">Modules</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">24/7</div>
+              <div className="hero-stat-label">Available</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Module Portal */}
+      <div className="portal-section">
+        <div className="section-header">
+          <div className="section-eyebrow">Access Portal</div>
+          <h2 className="section-title">Select Your Role</h2>
+          <div className="section-line"></div>
+        </div>
+        <div className="portal-cards">
+          {/* Student/Patient */}
+          <div className="portal-card" onClick={() => onEnter('student')}>
+            <div className="portal-icon">🎓</div>
+            <div className="portal-card-title">Student / Patient</div>
+            <div className="portal-card-desc">
+              Schedule appointments, monitor your queue status in real-time, and receive notifications for your clinic visits.
+            </div>
+            <ul className="portal-card-features">
+              <li><span className="feat-dot"></span>Appointment Scheduling</li>
+              <li><span className="feat-dot"></span>Real-time Queue Viewing</li>
+              <li><span className="feat-dot"></span>Notification Management</li>
+              <li><span className="feat-dot"></span>Visit History</li>
+            </ul>
+            <button className="portal-btn">Enter Student Portal →</button>
+          </div>
+          {/* Staff/Nurse */}
+          <div className="portal-card" onClick={() => onEnter('staff')}>
+            <div className="portal-icon">🩺</div>
+            <div className="portal-card-title">Clinic Staff / Nurse</div>
+            <div className="portal-card-desc">
+              Monitor and call the queue, manage doctor schedules, and log patient consultations efficiently.
+            </div>
+            <ul className="portal-card-features">
+              <li><span className="feat-dot"></span>Queue Monitoring & Calling</li>
+              <li><span className="feat-dot"></span>Schedule Management</li>
+              <li><span className="feat-dot"></span>Patient Consultation Logging</li>
+              <li><span className="feat-dot"></span>Availability Settings</li>
+            </ul>
+            <button className="portal-btn">Enter Staff Portal →</button>
+          </div>
+          {/* Admin */}
+          <div className="portal-card" onClick={() => onEnter('admin')}>
+            <div className="portal-icon">⚙️</div>
+            <div className="portal-card-title">Administrator</div>
+            <div className="portal-card-desc">
+              Manage user accounts, configure system settings, and access detailed statistical reports for the clinic.
+            </div>
+            <ul className="portal-card-features">
+              <li><span className="feat-dot"></span>User Account Management</li>
+              <li><span className="feat-dot"></span>System Configuration</li>
+              <li><span className="feat-dot"></span>Statistical Reporting</li>
+              <li><span className="feat-dot"></span>Peak Hour Analysis</li>
+            </ul>
+            <button className="portal-btn">Enter Admin Portal →</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════
+   AUTH MODAL
+════════════════════════════════════════════ */
+function AuthModal({ role, onAuth, onClose }) {
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({ email:'', password:'', name:'', idNum:'' });
+  const toast = useToast();
+  const roleLabels = { student:'Student / Patient', staff:'Clinic Staff', admin:'Administrator' };
+
+  const handle = () => {
+    if (!form.email || !form.password) { toast('Please fill in all fields.','⚠️'); return; }
+    toast(`Welcome to PSU Clinic System!`, '🏥');
+    onAuth({ name: form.name || form.email.split('@')[0] || 'User', role });
+  };
+
+  return (
+    <Modal title={`${roleLabels[role]} Login`} sub="Pangasinan State University Clinic" onClose={onClose}>
+      {mode === 'login' ? (
+        <>
+          <div className="form-group">
+            <label className="form-label">Email / Student ID</label>
+            <input className="form-input" placeholder="you@psu.edu.ph" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input className="form-input" type="password" placeholder="••••••••" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}/>
+          </div>
+          <button className="btn-primary" onClick={handle}>Sign In →</button>
+          {role === 'student' && (
+            <>
+              <div className="form-divider"><div className="form-divider-line"/><span className="form-divider-text">or</span><div className="form-divider-line"/></div>
+              <button className="btn-secondary" onClick={() => setMode('register')}>Create New Account</button>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input className="form-input" placeholder="Juan dela Cruz" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Student ID No.</label>
+              <input className="form-input" placeholder="2021-00001" value={form.idNum} onChange={e=>setForm(f=>({...f,idNum:e.target.value}))}/>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">PSU Email</label>
+            <input className="form-input" placeholder="you@psu.edu.ph" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}/>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input className="form-input" type="password" placeholder="••••••••" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Campus</label>
+              <select className="form-select"><option>Lingayen</option><option>Urdaneta</option><option>Bayambang</option><option>Asingan</option><option>Binmaley</option><option>San Carlos</option><option>Santa Maria</option><option>Infanta</option><option>Alaminos</option></select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Course / Program</label>
+            <input className="form-input" placeholder="BS Information Technology"/>
+          </div>
+          <button className="btn-primary" onClick={handle}>Register →</button>
+          <button className="btn-secondary" onClick={() => setMode('login')}>← Back to Login</button>
+        </>
+      )}
+    </Modal>
+  );
+}
+
+/* ════════════════════════════════════════════
+   STUDENT DASHBOARD
+════════════════════════════════════════════ */
+const studentQueue = [
+  { pos:'01', name:'Maria Santos', type:'General Consultation', eta:'Now' },
+  { pos:'02', name:'Carlo Reyes', type:'Medical Certificate', eta:'~10 min' },
+  { pos:'03', name:'Ana Bautista', type:'Follow-up Check', eta:'~20 min' },
+  { pos:'04', name:'You (Juan)', type:'General Consultation', eta:'~30 min', isYou:true },
+  { pos:'05', name:'Pedro Lim', type:'Laboratory Request', eta:'~40 min' },
+];
+
+const studentAppointments = [
+  { day:'05', mon:'May', type:'General Consultation', time:'09:00 AM', doctor:'Dr. Reyes' },
+  { day:'12', mon:'May', type:'Medical Certificate', time:'02:00 PM', doctor:'Dr. Santos' },
+  { day:'20', mon:'May', type:'Follow-up Check', time:'10:30 AM', doctor:'Dr. Cruz' },
+];
+
+const studentNotifs = [
+  { type:'succ', icon:'✅', text:'Your appointment on May 5 has been confirmed.', time:'Just now' },
+  { type:'info', icon:'🔔', text:'Queue #04 — You are 3 positions away from being called.', time:'5 mins ago' },
+  { type:'warn', icon:'⚠️', text:'Reminder: Bring your student ID for your medical certificate request.', time:'1 hr ago' },
+  { type:'succ', icon:'💊', text:'Your laboratory results are now available.', time:'Yesterday' },
+];
+
+function StudentDashboard({ user }) {
+  const [activeNav, setActiveNav] = useState('home');
+  const [showApptModal, setShowApptModal] = useState(false);
+  const toast = useToast();
+
+  const navItems = [
+    { id:'home', icon:'🏠', label:'Overview' },
+    { id:'queue', icon:'🔢', label:'Queue Status' },
+    { id:'appointments', icon:'📅', label:'Appointments' },
+    { id:'notifications', icon:'🔔', label:'Notifications' },
+    { id:'history', icon:'📋', label:'Visit History' },
+  ];
+
+  return (
+    <div className="dashboard">
+      {/* Sidebar */}
+      <div className="sidebar">
+        <div className="sidebar-user-card">
+          <div className="sidebar-avatar">{(user.name||'U').charAt(0).toUpperCase()}</div>
+          <div>
+            <div className="sidebar-user-name">{user.name}</div>
+            <div className="sidebar-user-role">Student · Lingayen</div>
+          </div>
+        </div>
+        <div className="sidebar-section-title">Navigation</div>
+        {navItems.map(n => (
+          <div key={n.id} className={`sidebar-nav-item ${activeNav===n.id?'active':''}`} onClick={()=>setActiveNav(n.id)}>
+            <span className="sidebar-icon">{n.icon}</span>{n.label}
+          </div>
+        ))}
+        <div className="sidebar-section-title">Quick Links</div>
+        <div className="sidebar-nav-item" onClick={()=>{setShowApptModal(true)}}>
+          <span className="sidebar-icon">➕</span>New Appointment
+        </div>
+        <div className="sidebar-nav-item">
+          <span className="sidebar-icon">📞</span>Emergency
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="dash-content">
+        <div className="dash-content-inner">
+          <div className="breadcrumb">
+            <span>PSU Clinic</span><span className="breadcrumb-sep">›</span>
+            <span>Student Portal</span><span className="breadcrumb-sep">›</span>
+            <span className="breadcrumb-cur">{navItems.find(n=>n.id===activeNav)?.label}</span>
+          </div>
+          <div className="dash-greeting">
+            <div className="dash-greeting-tag">Good Day, PSUnian 👋</div>
+            <div className="dash-greeting-title">Hello, {user.name}!</div>
+          </div>
+
+          {activeNav === 'home' && (
+            <>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-icon">🔢</div>
+                  <div className="stat-val">04</div>
+                  <div className="stat-label">Your Queue Number</div>
+                  <div className="stat-badge gold">~30 min wait</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">📅</div>
+                  <div className="stat-val">3</div>
+                  <div className="stat-label">Upcoming Appts.</div>
+                  <div className="stat-badge blue">May 5 next</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">🏃</div>
+                  <div className="stat-val">3</div>
+                  <div className="stat-label">Ahead in Queue</div>
+                  <div className="stat-badge green">Active</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">💊</div>
+                  <div className="stat-val">2</div>
+                  <div className="stat-label">Prescriptions</div>
+                  <div className="stat-badge gold">View</div>
+                </div>
+              </div>
+              <div className="content-row">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">🔢 Live Queue</div>
+                    <button className="panel-action">Refresh</button>
+                  </div>
+                  <div className="panel-body">
+                    <div className="queue-now">
+                      <div className="queue-label">Now Serving</div>
+                      <div className="queue-number">01</div>
+                      <div className="queue-name">Maria Santos</div>
+                    </div>
+                    <div className="queue-list">
+                      {studentQueue.slice(1).map(q => (
+                        <div key={q.pos} className="queue-item" style={q.isYou?{borderColor:'rgba(255,218,39,0.4)',background:'rgba(255,218,39,0.05)'}:{}}>
+                          <div className="queue-pos" style={q.isYou?{color:'white'}:{}}>{q.pos}</div>
+                          <div className="queue-info">
+                            <div className="queue-item-name" style={q.isYou?{color:'var(--psu-golden)'}:{}}>{q.name}{q.isYou?' ← You':''}</div>
+                            <div className="queue-item-type">{q.type}</div>
+                          </div>
+                          <div className="queue-eta">{q.eta}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">📅 Appointments</div>
+                    <button className="panel-action" onClick={()=>setShowApptModal(true)}>+ New</button>
+                  </div>
+                  <div className="panel-body">
+                    <div className="appt-list">
+                      {studentAppointments.map((a,i) => (
+                        <div key={i} className="appt-card">
+                          <div className="appt-date">
+                            <div className="appt-date-day">{a.day}</div>
+                            <div className="appt-date-mon">{a.mon}</div>
+                          </div>
+                          <div className="appt-info">
+                            <div className="appt-type">{a.type}</div>
+                            <div className="appt-time">⏰ {a.time}</div>
+                            <div className="appt-doctor">👩‍⚕️ {a.doctor}</div>
+                          </div>
+                          <span className="status-pill serving">Confirmed</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="panel">
+                <div className="panel-header">
+                  <div className="panel-title">🔔 Notifications</div>
+                  <button className="panel-action">Mark all read</button>
+                </div>
+                <div className="panel-body">
+                  <div className="notif-list">
+                    {studentNotifs.map((n,i) => (
+                      <div key={i} className={`notif-item ${n.type}`}>
+                        <div className="notif-icon">{n.icon}</div>
+                        <div>
+                          <div className="notif-text">{n.text}</div>
+                          <div className="notif-time">{n.time}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeNav === 'queue' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">🔢 Real-Time Queue Monitor</div>
+                <span className="status-pill serving"><span>●</span> Live</span>
+              </div>
+              <div className="panel-body">
+                <div className="queue-now" style={{marginBottom:24}}>
+                  <div className="queue-label">Currently Being Served</div>
+                  <div className="queue-number">01</div>
+                  <div className="queue-name">Maria Santos — General Consultation</div>
+                </div>
+                <div style={{display:'flex',gap:16,marginBottom:20,flexWrap:'wrap'}}>
+                  {[{label:'In Queue',val:'12',color:'gold'},{label:'Avg Wait',val:'8min',color:'blue'},{label:'Serving',val:'1',color:'green'}].map((s,i)=>(
+                    <div key={i} className="stat-card" style={{flex:'1',minWidth:100,padding:14}}>
+                      <div className="stat-val" style={{fontSize:'1.4rem'}}>{s.val}</div>
+                      <div className="stat-label">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="queue-list">
+                  {studentQueue.map(q => (
+                    <div key={q.pos} className="queue-item" style={q.isYou?{borderColor:'rgba(255,218,39,0.5)',background:'rgba(255,218,39,0.07)'}:{}}>
+                      <div className="queue-pos" style={q.pos==='01'?{color:'var(--medical-green)'}:q.isYou?{color:'white'}:{}}>{q.pos}</div>
+                      <div className="queue-info">
+                        <div className="queue-item-name" style={q.isYou?{color:'var(--psu-golden)'}:{}}>{q.name}{q.isYou?' ← You':''}</div>
+                        <div className="queue-item-type">{q.type}</div>
+                      </div>
+                      <div>
+                        <span className={`status-pill ${q.pos==='01'?'serving':q.isYou?'priority':'waiting'}`}>
+                          {q.pos==='01'?'In Service':q.isYou?'Your Turn Soon':'Waiting'}
+                        </span>
+                        <div className="queue-eta">{q.eta}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'appointments' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📅 My Appointments</div>
+                <button className="panel-action" onClick={()=>setShowApptModal(true)}>+ Book New</button>
+              </div>
+              <div className="panel-body">
+                <div className="appt-list">
+                  {studentAppointments.map((a,i)=>(
+                    <div key={i} className="appt-card">
+                      <div className="appt-date">
+                        <div className="appt-date-day">{a.day}</div>
+                        <div className="appt-date-mon">{a.mon}</div>
+                      </div>
+                      <div className="appt-info">
+                        <div className="appt-type">{a.type}</div>
+                        <div className="appt-time">⏰ {a.time}</div>
+                        <div className="appt-doctor">👩‍⚕️ {a.doctor}</div>
+                      </div>
+                      <div>
+                        <span className="status-pill serving">Confirmed</span>
+                        <div style={{marginTop:6,display:'flex',gap:6}}>
+                          <button className="panel-action" onClick={()=>toast('Appointment cancelled.','🗑️')} style={{color:'var(--medical-red)'}}>Cancel</button>
+                          <button className="panel-action" onClick={()=>toast('Appointment rescheduled.','📅')}>Reschedule</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'notifications' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">🔔 Notification Center</div>
+                <button className="panel-action" onClick={()=>toast('All notifications marked as read.','✅')}>Mark all read</button>
+              </div>
+              <div className="panel-body">
+                <div className="notif-list">
+                  {[...studentNotifs, 
+                    {type:'info',icon:'ℹ️',text:'Clinic hours today: 8:00 AM - 5:00 PM. Lunch break: 12:00 PM - 1:00 PM.',time:'2 hrs ago'},
+                    {type:'succ',icon:'📝',text:'Your medical certificate request has been processed and is ready for pickup.',time:'Yesterday'},
+                  ].map((n,i)=>(
+                    <div key={i} className={`notif-item ${n.type}`}>
+                      <div className="notif-icon">{n.icon}</div>
+                      <div>
+                        <div className="notif-text">{n.text}</div>
+                        <div className="notif-time">{n.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'history' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📋 Visit History</div>
+              </div>
+              <div className="panel-body">
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Date</th><th>Type</th><th>Doctor</th><th>Diagnosis</th><th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        {date:'Apr 10, 2026',type:'General Consultation',doc:'Dr. Reyes',diag:'Flu / Upper Respiratory',status:'done'},
+                        {date:'Mar 22, 2026',type:'Medical Certificate',doc:'Dr. Santos',diag:'Fit to Study',status:'done'},
+                        {date:'Feb 15, 2026',type:'Laboratory Request',doc:'Dr. Cruz',diag:'CBC / Urinalysis',status:'done'},
+                        {date:'Jan 08, 2026',type:'Follow-up',doc:'Dr. Reyes',diag:'Post-flu Check',status:'done'},
+                      ].map((r,i)=>(
+                        <tr key={i} className="user-table-row">
+                          <td>{r.date}</td>
+                          <td>{r.type}</td>
+                          <td style={{color:'rgba(255,218,39,0.8)'}}>{r.doc}</td>
+                          <td>{r.diag}</td>
+                          <td><span className="status-pill done">Completed</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Appointment Booking Modal */}
+      {showApptModal && (
+        <Modal title="Book Appointment" sub="PSU Clinic — Schedule a Visit" onClose={()=>setShowApptModal(false)}>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Date</label>
+              <input className="form-input" type="date"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Preferred Time</label>
+              <select className="form-select">
+                <option>08:00 AM</option><option>09:00 AM</option><option>10:00 AM</option>
+                <option>11:00 AM</option><option>01:00 PM</option><option>02:00 PM</option>
+                <option>03:00 PM</option><option>04:00 PM</option>
+              </select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Consultation Type</label>
+            <select className="form-select">
+              <option>General Consultation</option>
+              <option>Medical Certificate</option>
+              <option>Follow-up Check</option>
+              <option>Laboratory Request</option>
+              <option>Dental</option>
+              <option>Emergency</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Preferred Doctor</label>
+            <select className="form-select">
+              <option>Any Available</option>
+              <option>Dr. Maria Reyes</option>
+              <option>Dr. Juan Santos</option>
+              <option>Dr. Ana Cruz</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Chief Complaint / Reason</label>
+            <textarea className="form-textarea" placeholder="Briefly describe your symptoms or reason for visit..."/>
+          </div>
+          <button className="btn-primary" onClick={()=>{toast('Appointment booked successfully! Confirmation sent to your email.','✅');setShowApptModal(false);}}>
+            Confirm Booking →
+          </button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   STAFF DASHBOARD
+════════════════════════════════════════════ */
+const queueData = [
+  { pos:'01', name:'Maria Santos', type:'General Consultation', status:'serving', waited:'8 min' },
+  { pos:'02', name:'Carlo Reyes', type:'Medical Certificate', status:'waiting', waited:'15 min' },
+  { pos:'03', name:'Ana Bautista', type:'Follow-up', status:'waiting', waited:'22 min' },
+  { pos:'04', name:'Juan dela Cruz', type:'General', status:'waiting', waited:'30 min' },
+  { pos:'05', name:'Pedro Lim', type:'Lab Request', status:'waiting', waited:'35 min' },
+  { pos:'06', name:'Rosa Garcia', type:'Dental', status:'waiting', waited:'38 min' },
+];
+
+const schedDays = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const schedSlots = [
+  ['avail','avail','avail','avail','avail','off','off'],
+  ['avail','busy','avail','avail','busy','off','off'],
+  ['busy','avail','avail','busy','avail','off','off'],
+  ['avail','avail','busy','avail','avail','off','off'],
+];
+const schedTimes = ['8-9 AM','9-10 AM','10-11 AM','11-12 PM'];
+
+function StaffDashboard({ user }) {
+  const [activeNav, setActiveNav] = useState('home');
+  const [queue, setQueue] = useState(queueData);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const toast = useToast();
+
+  const callNext = () => {
+    setQueue(q => {
+      const next = [...q];
+      const servingIdx = next.findIndex(x => x.status === 'serving');
+      if (servingIdx !== -1) next[servingIdx].status = 'done';
+      const waitingIdx = next.findIndex(x => x.status === 'waiting');
+      if (waitingIdx !== -1) next[waitingIdx].status = 'serving';
+      return next;
+    });
+    toast('Next patient called! Announcement sent.','📢');
+  };
+
+  const navItems = [
+    { id:'home', icon:'🏠', label:'Overview' },
+    { id:'queue', icon:'📋', label:'Queue Monitor' },
+    { id:'schedule', icon:'📅', label:'My Schedule' },
+    { id:'log', icon:'📝', label:'Patient Logs' },
+  ];
+
+  return (
+    <div className="dashboard">
+      <div className="sidebar">
+        <div className="sidebar-user-card">
+          <div className="sidebar-avatar" style={{background:'linear-gradient(135deg,#00b894,#0984e3)'}}>
+            {(user.name||'N').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div className="sidebar-user-name">{user.name}</div>
+            <div className="sidebar-user-role">Clinic Staff · Nurse</div>
+          </div>
+        </div>
+        <div className="sidebar-section-title">Navigation</div>
+        {navItems.map(n => (
+          <div key={n.id} className={`sidebar-nav-item ${activeNav===n.id?'active':''}`} onClick={()=>setActiveNav(n.id)}>
+            <span className="sidebar-icon">{n.icon}</span>{n.label}
+          </div>
+        ))}
+        <div className="sidebar-section-title">Quick Actions</div>
+        <div className="sidebar-nav-item" onClick={callNext}>
+          <span className="sidebar-icon">📢</span>Call Next
+        </div>
+        <div className="sidebar-nav-item" onClick={()=>setShowLogModal(true)}>
+          <span className="sidebar-icon">➕</span>Log Consultation
+        </div>
+        <div className="sidebar-nav-item" onClick={()=>toast('Emergency protocol activated!','🚨')}>
+          <span className="sidebar-icon">🚨</span>Emergency
+        </div>
+      </div>
+
+      <div className="dash-content">
+        <div className="dash-content-inner">
+          <div className="breadcrumb">
+            <span>PSU Clinic</span><span className="breadcrumb-sep">›</span>
+            <span>Staff Portal</span><span className="breadcrumb-sep">›</span>
+            <span className="breadcrumb-cur">{navItems.find(n=>n.id===activeNav)?.label}</span>
+          </div>
+          <div className="dash-greeting">
+            <div className="dash-greeting-tag">Clinic Staff Interface 🩺</div>
+            <div className="dash-greeting-title">Welcome, {user.name}</div>
+          </div>
+
+          {activeNav === 'home' && (
+            <>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-icon">👥</div>
+                  <div className="stat-val">{queue.filter(q=>q.status!=='done').length}</div>
+                  <div className="stat-label">In Queue</div>
+                  <div className="stat-badge gold">Active</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">✅</div>
+                  <div className="stat-val">{queue.filter(q=>q.status==='done').length}</div>
+                  <div className="stat-label">Served Today</div>
+                  <div className="stat-badge green">+12 total</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">⏱️</div>
+                  <div className="stat-val">8</div>
+                  <div className="stat-label">Avg Wait (min)</div>
+                  <div className="stat-badge blue">Normal</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">📅</div>
+                  <div className="stat-val">7</div>
+                  <div className="stat-label">Today's Appts.</div>
+                  <div className="stat-badge gold">3 pending</div>
+                </div>
+              </div>
+
+              <div className="content-row">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">📋 Live Queue</div>
+                    <span className="status-pill serving"><span>●</span> Live</span>
+                  </div>
+                  <div className="panel-body">
+                    <button className="call-next-btn" onClick={callNext}>
+                      📢 Call Next Patient
+                    </button>
+                    <div className="queue-list">
+                      {queue.map(q => (
+                        <div key={q.pos} className="queue-item">
+                          <div className="queue-pos" style={q.status==='serving'?{color:'var(--medical-green)'}:q.status==='done'?{color:'rgba(255,255,255,0.2)'}:{}}>
+                            {q.pos}
+                          </div>
+                          <div className="queue-info">
+                            <div className="queue-item-name" style={q.status==='done'?{textDecoration:'line-through',opacity:0.4}:{}}>{q.name}</div>
+                            <div className="queue-item-type">{q.type} · {q.waited}</div>
+                          </div>
+                          <span className={`status-pill ${q.status}`}>
+                            {q.status==='serving'?'In Service':q.status==='done'?'Done':'Waiting'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">📅 Today's Appointments</div>
+                  </div>
+                  <div className="panel-body">
+                    <div className="appt-list">
+                      {[
+                        {day:'Today', time:'09:00 AM', name:'Maria Santos', type:'General', doc:'Dr. Reyes', status:'serving'},
+                        {day:'Today', time:'10:00 AM', name:'Carlo Reyes', type:'Med Cert', doc:'Dr. Santos', status:'waiting'},
+                        {day:'Today', time:'11:00 AM', name:'Ana Bautista', type:'Follow-up', doc:'Dr. Cruz', status:'waiting'},
+                      ].map((a,i) => (
+                        <div key={i} className="appt-card" onClick={()=>setShowLogModal(true)}>
+                          <div className="appt-date" style={{background:'rgba(9,39,216,0.3)',padding:'8px',minWidth:56,textAlign:'center'}}>
+                            <div style={{fontSize:'0.65rem',color:'rgba(255,255,255,0.5)'}}>{a.day}</div>
+                            <div style={{fontFamily:'JetBrains Mono, monospace',fontSize:'0.8rem',color:'var(--psu-golden)',fontWeight:'700'}}>{a.time}</div>
+                          </div>
+                          <div className="appt-info">
+                            <div className="appt-type">{a.name}</div>
+                            <div className="appt-time">{a.type}</div>
+                            <div className="appt-doctor">👩‍⚕️ {a.doc}</div>
+                          </div>
+                          <span className={`status-pill ${a.status}`}>
+                            {a.status==='serving'?'Now':'Pending'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeNav === 'queue' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📋 Queue Monitor & Control</div>
+                <span className="status-pill serving">● Live</span>
+              </div>
+              <div className="panel-body">
+                <button className="call-next-btn" onClick={callNext}>
+                  📢 Call Next Patient
+                </button>
+                <div className="table-wrap">
+                  <table>
+                    <thead><tr><th>#</th><th>Patient</th><th>Type</th><th>Waited</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                      {queue.map(q => (
+                        <tr key={q.pos}>
+                          <td style={{fontFamily:'Cinzel,serif',fontWeight:700,color:'var(--psu-golden)'}}>{q.pos}</td>
+                          <td style={{fontWeight:600}}>{q.name}</td>
+                          <td className="text-muted">{q.type}</td>
+                          <td style={{fontFamily:'JetBrains Mono,monospace',fontSize:'0.72rem',color:'rgba(255,218,39,0.7)'}}>{q.waited}</td>
+                          <td><span className={`status-pill ${q.status}`}>{q.status}</span></td>
+                          <td>
+                            {q.status==='waiting' && (
+                              <button className="panel-action" onClick={()=>toast(`${q.name} has been called.`,'📢')}>Call</button>
+                            )}
+                            {q.status==='serving' && (
+                              <button className="panel-action" onClick={()=>setShowLogModal(true)}>Log</button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'schedule' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📅 Weekly Schedule</div>
+                <button className="panel-action" onClick={()=>toast('Schedule saved!','✅')}>Save Changes</button>
+              </div>
+              <div className="panel-body">
+                <div className="sched-grid">
+                  {schedDays.map(d => <div key={d} className="sched-day-header">{d}</div>)}
+                  {schedSlots.map((row,ri) => row.map((slot,ci) => (
+                    <div key={`${ri}-${ci}`} className={`sched-slot ${slot} ${ri===0&&ci===0?'today':''}`} onClick={()=>toast('Slot toggled!','📅')} title={`${schedTimes[ri]}`}>
+                      <div style={{fontSize:'0.55rem',marginBottom:2}}>{schedTimes[ri]}</div>
+                      <div>{slot==='avail'?'✓':slot==='busy'?'●':'–'}</div>
+                    </div>
+                  )))}
+                </div>
+                <div style={{display:'flex',gap:16,marginTop:16,flexWrap:'wrap'}}>
+                  {[{cls:'avail',label:'Available'},{cls:'busy',label:'Busy'},{cls:'off',label:'Day Off'}].map(l=>(
+                    <div key={l.cls} style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div className={`sched-slot ${l.cls}`} style={{width:20,height:20,fontSize:'0',padding:0,borderRadius:4}}/>
+                      <span className="text-muted">{l.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{marginTop:20}}>
+                  <div className="panel-title" style={{marginBottom:12}}>⚙️ Availability Settings</div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Daily Slot Limit</label>
+                      <input className="form-input" type="number" defaultValue={20}/>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Consultation Duration</label>
+                      <select className="form-select"><option>10 minutes</option><option>15 minutes</option><option>20 minutes</option></select>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Break Time</label>
+                    <div className="form-row">
+                      <input className="form-input" type="time" defaultValue="12:00"/>
+                      <input className="form-input" type="time" defaultValue="13:00"/>
+                    </div>
+                  </div>
+                  <button className="btn-primary" onClick={()=>toast('Availability settings saved!','✅')}>Save Settings →</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'log' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📝 Patient Consultation Logs</div>
+                <button className="panel-action" onClick={()=>setShowLogModal(true)}>+ New Log</button>
+              </div>
+              <div className="panel-body">
+                <div className="table-wrap">
+                  <table>
+                    <thead><tr><th>Date/Time</th><th>Patient</th><th>Type</th><th>Diagnosis/Notes</th><th>Physician</th><th>Status</th></tr></thead>
+                    <tbody>
+                      {[
+                        {dt:'Apr 30, 09:12',name:'Maria Santos',type:'General',notes:'Upper respiratory infection, prescribed amoxicillin.',doc:'Dr. Reyes',status:'done'},
+                        {dt:'Apr 30, 08:45',name:'Rosa Garcia',type:'Dental',notes:'Tooth extraction, post-op instructions given.',doc:'Dr. Cruz',status:'done'},
+                        {dt:'Apr 29, 03:10 PM',name:'Pedro Lim',type:'Lab Request',notes:'CBC, Urinalysis ordered.',doc:'Dr. Santos',status:'done'},
+                        {dt:'Apr 29, 02:00 PM',name:'Ana Bautista',type:'Follow-up',notes:'Post-flu recovery, patient improving.',doc:'Dr. Reyes',status:'done'},
+                      ].map((r,i)=>(
+                        <tr key={i}>
+                          <td style={{fontFamily:'JetBrains Mono,monospace',fontSize:'0.72rem',color:'rgba(255,218,39,0.7)',whiteSpace:'nowrap'}}>{r.dt}</td>
+                          <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{r.name}</td>
+                          <td className="text-muted">{r.type}</td>
+                          <td style={{fontSize:'0.78rem',maxWidth:180}}>{r.notes}</td>
+                          <td style={{color:'rgba(255,218,39,0.8)',whiteSpace:'nowrap'}}>{r.doc}</td>
+                          <td><span className="status-pill done">Done</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showLogModal && (
+        <Modal title="Patient Consultation Log" sub="Record consultation details" onClose={()=>setShowLogModal(false)}>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Patient Name / ID</label>
+              <input className="form-input" placeholder="Search student..."/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Queue Number</label>
+              <input className="form-input" placeholder="#01"/>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Consultation Type</label>
+            <select className="form-select">
+              <option>General Consultation</option>
+              <option>Medical Certificate</option>
+              <option>Follow-up</option>
+              <option>Laboratory Request</option>
+              <option>Dental</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Chief Complaint</label>
+            <input className="form-input" placeholder="Patient's reported symptoms..."/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Diagnosis / Assessment</label>
+            <textarea className="form-textarea" placeholder="Clinical findings and diagnosis..."/>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Prescription / Orders</label>
+            <textarea className="form-textarea" placeholder="Medications, lab orders, referrals..."/>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Attending Physician</label>
+              <select className="form-select">
+                <option>Dr. Maria Reyes</option>
+                <option>Dr. Juan Santos</option>
+                <option>Dr. Ana Cruz</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Follow-up Date</label>
+              <input className="form-input" type="date"/>
+            </div>
+          </div>
+          <button className="btn-primary" onClick={()=>{toast('Consultation logged successfully!','📋');setShowLogModal(false);}}>Save Log →</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   ADMIN DASHBOARD
+════════════════════════════════════════════ */
+const users = [
+  {id:'2021-00001',name:'Maria Santos',role:'student',campus:'Lingayen',status:'active',joined:'Jan 2021'},
+  {id:'2022-00034',name:'Carlo Reyes',role:'student',campus:'Urdaneta',status:'active',joined:'Jun 2022'},
+  {id:'STF-001',name:'Nurse Ana Cruz',role:'staff',campus:'Lingayen',status:'active',joined:'Mar 2019'},
+  {id:'STF-002',name:'Dr. Juan Santos',role:'staff',campus:'Lingayen',status:'active',joined:'Aug 2018'},
+  {id:'ADM-001',name:'Admin Office',role:'admin',campus:'Lingayen',status:'active',joined:'Jan 2015'},
+  {id:'2023-00078',name:'Pedro Lim',role:'student',campus:'Bayambang',status:'inactive',joined:'Jun 2023'},
+];
+
+const ailments = [
+  {name:'Upper Resp.',pct:32},{name:'Flu / Fever',pct:24},{name:'Headache',pct:18},
+  {name:'GI Issues',pct:12},{name:'Eye Strain',pct:8},{name:'Others',pct:6},
+];
+
+function AdminDashboard({ user }) {
+  const [activeNav, setActiveNav] = useState('home');
+  const [showUserModal, setShowUserModal] = useState(false);
+  const toast = useToast();
+
+  const navItems = [
+    {id:'home',icon:'🏠',label:'Overview'},
+    {id:'users',icon:'👥',label:'User Management'},
+    {id:'config',icon:'⚙️',label:'System Config'},
+    {id:'reports',icon:'📊',label:'Reports'},
+  ];
+
+  const chartData = [
+    {day:'MON',val:65,type:'blue'},{day:'TUE',val:80,type:'gold'},{day:'WED',val:55,type:'blue'},
+    {day:'THU',val:90,type:'gold'},{day:'FRI',val:75,type:'blue'},{day:'SAT',val:30,type:'green'},
+  ];
+
+  return (
+    <div className="dashboard">
+      <div className="sidebar">
+        <div className="sidebar-user-card">
+          <div className="sidebar-avatar" style={{background:'linear-gradient(135deg,#FFDA27,#d4a800)',color:'#020847'}}>
+            {(user.name||'A').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div className="sidebar-user-name">{user.name}</div>
+            <div className="sidebar-user-role">System Administrator</div>
+          </div>
+        </div>
+        <div className="sidebar-section-title">Navigation</div>
+        {navItems.map(n=>(
+          <div key={n.id} className={`sidebar-nav-item ${activeNav===n.id?'active':''}`} onClick={()=>setActiveNav(n.id)}>
+            <span className="sidebar-icon">{n.icon}</span>{n.label}
+          </div>
+        ))}
+        <div className="sidebar-section-title">System</div>
+        <div className="sidebar-nav-item" onClick={()=>toast('System backup started!','💾')}>
+          <span className="sidebar-icon">💾</span>Backup Data
+        </div>
+        <div className="sidebar-nav-item" onClick={()=>toast('Logs exported!','📤')}>
+          <span className="sidebar-icon">📤</span>Export Logs
+        </div>
+        <div className="sidebar-nav-item">
+          <span className="sidebar-icon">🔒</span>Audit Trail
+        </div>
+      </div>
+
+      <div className="dash-content">
+        <div className="dash-content-inner">
+          <div className="breadcrumb">
+            <span>PSU Clinic</span><span className="breadcrumb-sep">›</span>
+            <span>Admin Portal</span><span className="breadcrumb-sep">›</span>
+            <span className="breadcrumb-cur">{navItems.find(n=>n.id===activeNav)?.label}</span>
+          </div>
+          <div className="dash-greeting">
+            <div className="dash-greeting-tag">Administrator Console ⚙️</div>
+            <div className="dash-greeting-title">Admin: {user.name}</div>
+          </div>
+
+          {activeNav === 'home' && (
+            <>
+              <div className="stats-grid">
+                {[
+                  {icon:'👥',val:'1,247',label:'Total Registered',badge:{cls:'green',txt:'↑ 32 this month'}},
+                  {icon:'📅',val:'87',label:'Appts This Month',badge:{cls:'gold',txt:'↑ 12%'}},
+                  {icon:'⏱️',val:'11min',label:'Avg Wait Time',badge:{cls:'blue',txt:'↓ 2min better'}},
+                  {icon:'📋',val:'342',label:'Consults This Month',badge:{cls:'green',txt:'Normal range'}},
+                ].map((s,i)=>(
+                  <div key={i} className="stat-card">
+                    <div className="stat-icon">{s.icon}</div>
+                    <div className="stat-val">{s.val}</div>
+                    <div className="stat-label">{s.label}</div>
+                    <div className={`stat-badge ${s.badge.cls}`}>{s.badge.txt}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="content-row">
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">📊 Daily Patient Volume</div>
+                    <button className="panel-action">This Week</button>
+                  </div>
+                  <div className="panel-body">
+                    <div className="chart-bars">
+                      {chartData.map((d,i)=>(
+                        <div key={i} className="chart-bar-wrap">
+                          <div className={`chart-bar ${d.type}`} style={{height:`${d.val}%`}}/>
+                          <div className="chart-day">{d.day}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{marginTop:12,fontSize:'0.75rem',color:'rgba(255,255,255,0.4)'}}>
+                      Peak: Thursday · 90 patients
+                    </div>
+                  </div>
+                </div>
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">🦠 Common Ailments</div>
+                    <button className="panel-action">April 2026</button>
+                  </div>
+                  <div className="panel-body">
+                    {ailments.map((a,i)=>(
+                      <div key={i} className="ailment-row">
+                        <div className="ailment-label">{a.name}</div>
+                        <div className="ailment-bar-track">
+                          <div className="ailment-bar-fill" style={{width:`${a.pct*3}%`}}/>
+                        </div>
+                        <div className="ailment-pct">{a.pct}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="panel">
+                <div className="panel-header">
+                  <div className="panel-title">🕐 Peak Hour Analysis</div>
+                </div>
+                <div className="panel-body">
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                    {['7AM','8AM','9AM','10AM','11AM','12PM','1PM','2PM','3PM','4PM','5PM'].map((h,i)=>{
+                      const heights = [5,60,90,85,70,30,65,80,55,40,10];
+                      return (
+                        <div key={h} style={{flex:1,minWidth:40,textAlign:'center'}}>
+                          <div style={{background:`rgba(9,39,216,${heights[i]/100})`,height:heights[i],borderRadius:'4px 4px 0 0',marginBottom:4,border:'1px solid rgba(255,218,39,0.1)',transition:'all 0.3s'}}/>
+                          <div style={{fontSize:'0.6rem',color:'rgba(255,255,255,0.4)'}}>{h}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{marginTop:12,display:'flex',gap:20,fontSize:'0.78rem',color:'rgba(255,255,255,0.5)'}}>
+                    <span>🔴 Peak: 9–11 AM</span>
+                    <span>🟡 High: 1–3 PM</span>
+                    <span>🟢 Low: 12 PM, 4–5 PM</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeNav === 'users' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">👥 User Account Management</div>
+                <button className="panel-action" onClick={()=>setShowUserModal(true)}>+ Add User</button>
+              </div>
+              <div className="panel-body">
+                <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}}>
+                  <input className="form-input" placeholder="🔍  Search users..." style={{flex:1,maxWidth:300}}/>
+                  <select className="form-select" style={{width:'auto'}}>
+                    <option>All Roles</option><option>Student</option><option>Staff</option><option>Admin</option>
+                  </select>
+                  <select className="form-select" style={{width:'auto'}}>
+                    <option>All Campuses</option><option>Lingayen</option><option>Urdaneta</option><option>Bayambang</option>
+                  </select>
+                </div>
+                <div className="table-wrap">
+                  <table>
+                    <thead><tr><th>ID / User</th><th>Name</th><th>Role</th><th>Campus</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                    <tbody>
+                      {users.map((u,i)=>(
+                        <tr key={i} className="user-table-row">
+                          <td>
+                            <div style={{display:'flex',alignItems:'center',gap:8}}>
+                              <div className="user-avatar-sm">{u.name.charAt(0)}</div>
+                              <span style={{fontFamily:'JetBrains Mono,monospace',fontSize:'0.7rem',color:'rgba(255,255,255,0.5)'}}>{u.id}</span>
+                            </div>
+                          </td>
+                          <td style={{fontWeight:600}}>{u.name}</td>
+                          <td><span className={`role-badge ${u.role}`}>{u.role}</span></td>
+                          <td className="text-muted">{u.campus}</td>
+                          <td><span className={`status-pill ${u.status==='active'?'serving':'done'}`}>{u.status}</span></td>
+                          <td className="text-muted">{u.joined}</td>
+                          <td>
+                            <div style={{display:'flex',gap:8}}>
+                              <button className="panel-action" onClick={()=>toast(`Editing ${u.name}`,'✏️')}>Edit</button>
+                              <button className="panel-action" style={{color:'var(--medical-red)'}} onClick={()=>toast(`${u.name} deactivated`,'🚫')}>
+                                {u.status==='active'?'Deactivate':'Activate'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'config' && (
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">⚙️ System Configuration</div>
+                <button className="panel-action" onClick={()=>toast('Configuration saved!','✅')}>Save All</button>
+              </div>
+              <div className="panel-body">
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+                  <div>
+                    <div style={{fontSize:'0.8rem',fontWeight:700,color:'var(--psu-golden)',marginBottom:14,letterSpacing:'0.1em',textTransform:'uppercase'}}>🏥 Clinic Settings</div>
+                    <div className="form-group">
+                      <label className="form-label">Clinic Name</label>
+                      <input className="form-input" defaultValue="PSU University Clinic"/>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Campus</label>
+                      <select className="form-select"><option>Lingayen (Main)</option></select>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="form-label">Open Time</label>
+                        <input className="form-input" type="time" defaultValue="08:00"/>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Close Time</label>
+                        <input className="form-input" type="time" defaultValue="17:00"/>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Max Daily Queue</label>
+                      <input className="form-input" type="number" defaultValue={100}/>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Queue Reset Time</label>
+                      <input className="form-input" type="time" defaultValue="07:00"/>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:'0.8rem',fontWeight:700,color:'var(--psu-golden)',marginBottom:14,letterSpacing:'0.1em',textTransform:'uppercase'}}>🔔 Notification Settings</div>
+                    {[
+                      {label:'Email Notifications',def:true},
+                      {label:'SMS Notifications',def:false},
+                      {label:'Queue Call Announcements',def:true},
+                      {label:'Appointment Reminders',def:true},
+                      {label:'Auto-cancel after 30 min',def:true},
+                    ].map((s,i)=>(
+                      <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+                        <span style={{fontSize:'0.85rem',color:'rgba(255,255,255,0.75)'}}>{s.label}</span>
+                        <div style={{width:40,height:22,background:s.def?'var(--medical-green)':'rgba(255,255,255,0.15)',borderRadius:11,cursor:'pointer',position:'relative',transition:'all 0.3s'}}
+                          onClick={()=>toast('Setting toggled!','⚙️')}>
+                          <div style={{width:18,height:18,background:'white',borderRadius:'50%',position:'absolute',top:2,left:s.def?'calc(100% - 20px)':2,transition:'left 0.3s'}}/>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{marginTop:20,fontSize:'0.8rem',fontWeight:700,color:'var(--psu-golden)',marginBottom:14,letterSpacing:'0.1em',textTransform:'uppercase'}}>🔒 Security</div>
+                    <div className="form-group">
+                      <label className="form-label">Session Timeout</label>
+                      <select className="form-select"><option>30 minutes</option><option>1 hour</option><option>2 hours</option></select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Password Policy</label>
+                      <select className="form-select"><option>Standard (8+ chars)</option><option>Strong (12+ chars + symbols)</option></select>
+                    </div>
+                  </div>
+                </div>
+                <button className="btn-primary" style={{marginTop:16}} onClick={()=>toast('All settings saved successfully!','✅')}>
+                  Save Configuration →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeNav === 'reports' && (
+            <>
+              <div className="stats-grid" style={{gridTemplateColumns:'repeat(2,1fr)'}}>
+                <div className="panel">
+                  <div className="panel-header"><div className="panel-title">📊 Monthly Summary</div></div>
+                  <div className="panel-body">
+                    <div className="report-metric-grid">
+                      {[{val:'342',label:'Total Consultations'},{val:'87',label:'Appointments Kept'},{val:'94%',label:'Satisfaction Rate'},{val:'11min',label:'Avg Wait Time'}]
+                        .map((m,i)=>(
+                          <div key={i} className="report-metric">
+                            <div className="report-metric-val">{m.val}</div>
+                            <div className="report-metric-label">{m.label}</div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="panel">
+                  <div className="panel-header"><div className="panel-title">🦠 Ailment Distribution</div></div>
+                  <div className="panel-body">
+                    {ailments.map((a,i)=>(
+                      <div key={i} className="ailment-row">
+                        <div className="ailment-label">{a.name}</div>
+                        <div className="ailment-bar-track">
+                          <div className="ailment-bar-fill" style={{width:`${a.pct*3}%`}}/>
+                        </div>
+                        <div className="ailment-pct">{a.pct}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="panel">
+                <div className="panel-header">
+                  <div className="panel-title">📅 Appointment & Queue Analytics</div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button className="panel-action" onClick={()=>toast('Report exported as PDF!','📥')}>Export PDF</button>
+                    <button className="panel-action" onClick={()=>toast('Report exported as CSV!','📊')}>Export CSV</button>
+                  </div>
+                </div>
+                <div className="panel-body">
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:20}}>
+                    {[
+                      {label:'No-show Rate',val:'13%',icon:'🚫'},
+                      {label:'Walk-in Rate',val:'44%',icon:'🚶'},
+                      {label:'Repeat Visits',val:'28%',icon:'🔄'},
+                      {label:'Referrals Out',val:'8%',icon:'🏥'},
+                      {label:'Med Certs Issued',val:'64',icon:'📄'},
+                      {label:'Lab Requests',val:'29',icon:'🔬'},
+                    ].map((m,i)=>(
+                      <div key={i} className="report-metric">
+                        <div style={{fontSize:'1.5rem',marginBottom:4}}>{m.icon}</div>
+                        <div className="report-metric-val" style={{fontSize:'1.3rem'}}>{m.val}</div>
+                        <div className="report-metric-label">{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{fontSize:'0.78rem',color:'rgba(255,255,255,0.4)',padding:'12px',background:'rgba(255,255,255,0.03)',borderRadius:8,fontFamily:'JetBrains Mono, monospace'}}>
+                    Report generated: April 30, 2026 · PSU Lingayen Campus Clinic · By: {user.name}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {showUserModal && (
+        <Modal title="Add New User" sub="Create account for PSU Clinic System" onClose={()=>setShowUserModal(false)}>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input className="form-input" placeholder="Juan dela Cruz"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">ID Number</label>
+              <input className="form-input" placeholder="2024-00001"/>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input className="form-input" placeholder="user@psu.edu.ph"/>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Role</label>
+              <select className="form-select"><option>Student</option><option>Staff</option><option>Admin</option></select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Campus</label>
+              <select className="form-select"><option>Lingayen</option><option>Urdaneta</option><option>Bayambang</option><option>Asingan</option><option>Binmaley</option></select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Temporary Password</label>
+            <input className="form-input" type="password" placeholder="Set initial password..."/>
+          </div>
+          <button className="btn-primary" onClick={()=>{toast('User account created successfully!','👤');setShowUserModal(false);}}>
+            Create Account →
+          </button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   ROOT APP
+════════════════════════════════════════════ */
+function App() {
+  const [view, setView] = useState('landing');   // landing | auth | student | staff | admin
+  const [authRole, setAuthRole] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const handleEnter = (role) => { setAuthRole(role); setView('auth'); };
+  const handleAuth  = (userData) => { setUser(userData); setView(userData.role); };
+  const handleLogout = () => { setUser(null); setAuthRole(null); setView('landing'); };
+
+  const navTabsConfig = [
+    { id:'landing', label:'🏥 Home' },
+    { id:'student', label:'🎓 Student' },
+    { id:'staff',   label:'🩺 Staff' },
+    { id:'admin',   label:'⚙️ Admin' },
+  ];
+
+  return (
+    <ToastProvider>
+      {/* NAV */}
+      <nav className="topnav">
+        <div className="nav-brand" onClick={handleLogout}>
+          <PSUSealMini/>
+          <div className="nav-brand-text">
+            <div className="nav-brand-title">Pangasinan State University</div>
+            <div className="nav-brand-sub">University Clinic · Queue System</div>
+          </div>
+        </div>
+
+        {!user && (
+          <div className="nav-tabs">
+            {['student','staff','admin'].map(r=>(
+              <button key={r} className={`nav-tab ${authRole===r&&view==='auth'?'active':''}`} onClick={()=>handleEnter(r)}>
+                {{student:'🎓 Student',staff:'🩺 Staff',admin:'⚙️ Admin'}[r]}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {user && (
+          <div className="nav-tabs">
+            <button className="nav-tab active">
+              {{student:'🎓 Student',staff:'🩺 Staff',admin:'⚙️ Admin'}[user.role]}
+            </button>
+          </div>
+        )}
+
+        <div className="nav-actions">
+          <Clock/>
+          <div className="nav-status-dot" title="System Online"/>
+          {user && (
+            <button className="btn-secondary" style={{width:'auto',padding:'6px 14px',marginTop:0,fontSize:'0.78rem'}} onClick={handleLogout}>
+              Sign Out
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* VIEWS */}
+      {view === 'landing' && <LandingPage onEnter={handleEnter}/>}
+
+      {view === 'auth' && (
+        <>
+          <LandingPage onEnter={handleEnter}/>
+          <AuthModal role={authRole} onAuth={handleAuth} onClose={()=>{setView('landing');setAuthRole(null);}}/>
+        </>
+      )}
+
+      {view === 'student' && user && <StudentDashboard user={user}/>}
+      {view === 'staff'   && user && <StaffDashboard user={user}/>}
+      {view === 'admin'   && user && <AdminDashboard user={user}/>}
+    </ToastProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+</script>
+
+<script>
+/* ─── Splash screen particles ─── */
+(function() {
+  const container = document.getElementById('particles');
+  const colors = ['#FFDA27','#0927D8','#ffffff','#00b894'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 2;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*8+5}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+
+/* ─── Show app after splash ─── */
+window.addEventListener('load', function() {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    const app = document.getElementById('app');
+    splash.classList.add('hidden');
+    app.classList.add('visible');
+    setTimeout(() => { splash.style.display = 'none'; }, 900);
+  }, 3800);
+});
+</script>
+</body>
+</html>
